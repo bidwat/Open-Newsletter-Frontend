@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Toast from "@/src/components/Toast";
+import ScrollableTable from "@/src/components/ScrollableTable";
 import {
   addContact,
   copyMailingList,
@@ -525,7 +526,7 @@ export default function MailingListsWorkspace() {
       </aside>
 
       <section className="workspace-detail">
-        <div className="panel pressable">
+        <div className="panel pressable workspace-panel">
           <div className="panel-header">
             <h2>List details</h2>
             <p>View description and manage contacts.</p>
@@ -587,41 +588,43 @@ export default function MailingListsWorkspace() {
                 </button>
               </div>
 
-              {contacts.length === 0 ? (
-                <p className="muted">No contacts yet.</p>
-              ) : (
-                <div className="table">
-                  <div className="table-row table-head">
-                    <span>Email</span>
-                    <span>Name</span>
-                    <span>Actions</span>
-                  </div>
-                  {contacts.map((contact) => (
-                    <div key={contact.id} className="table-row">
-                      <span>{contact.email}</span>
-                      <span>
-                        {contact.firstName || ""} {contact.lastName || ""}
-                      </span>
-                      <span className="row-actions">
-                        <button
-                          type="button"
-                          className="button secondary"
-                          onClick={() => openEditContact(contact)}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          className="button secondary action-delete"
-                          onClick={() => handleRemoveContact(contact.id)}
-                        >
-                          Remove
-                        </button>
-                      </span>
+              <div className="table-section">
+                {contacts.length === 0 ? (
+                  <p className="muted">No contacts yet.</p>
+                ) : (
+                  <ScrollableTable>
+                    <div className="table-row table-head">
+                      <span>Email</span>
+                      <span>Name</span>
+                      <span>Actions</span>
                     </div>
-                  ))}
-                </div>
-              )}
+                    {contacts.map((contact) => (
+                      <div key={contact.id} className="table-row">
+                        <span>{contact.email}</span>
+                        <span>
+                          {contact.firstName || ""} {contact.lastName || ""}
+                        </span>
+                        <span className="row-actions">
+                          <button
+                            type="button"
+                            className="button secondary"
+                            onClick={() => openEditContact(contact)}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            className="button secondary action-delete"
+                            onClick={() => handleRemoveContact(contact.id)}
+                          >
+                            Remove
+                          </button>
+                        </span>
+                      </div>
+                    ))}
+                  </ScrollableTable>
+                )}
+              </div>
             </>
           ) : (
             <p className="muted">Select a list to see details.</p>

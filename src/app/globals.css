@@ -38,10 +38,12 @@ code {
 .newsletter-shell {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 32px 24px 80px;
+  padding: 0;
   display: flex;
   flex-direction: column;
   gap: 32px;
+  flex: 1;
+  min-height: 0;
 }
 
 .app-frame {
@@ -50,6 +52,7 @@ code {
   flex-direction: column;
   gap: 24px;
   padding: 24px;
+  max-height: 1vh;
 }
 
 .pressable {
@@ -195,6 +198,8 @@ code {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  flex: 1;
+  min-height: 0;
 }
 
 .section-head h2 {
@@ -241,6 +246,8 @@ code {
   display: grid;
   grid-template-columns: minmax(240px, 320px) minmax(520px, 1fr);
   gap: 20px;
+  flex: 1;
+  min-height: 0;
 }
 
 .workspace-sidebar {
@@ -301,6 +308,20 @@ code {
   max-width: 900px;
   width: 100%;
   position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+.workspace-panel {
+  flex: 1;
+  min-height: 0;
+}
+
+.table-section {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }
 
 .filter-row {
@@ -849,7 +870,15 @@ button:disabled,
   font-size: 0.9rem;
 }
 
-.table {
+.table-shell {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 6px;
+}
+
+.table-core {
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -937,10 +966,9 @@ button:disabled,
 
 .audience-row {
   display: grid;
-  grid-template-columns: 32px minmax(120px, 1fr) minmax(160px, 1.4fr) minmax(
-      160px,
-      1.4fr
-    ) 90px;
+  grid-template-columns:
+    32px minmax(120px, 1fr) minmax(160px, 1.4fr) minmax(160px, 1.4fr)
+    90px;
   gap: 10px;
   align-items: center;
   border: var(--border);

@@ -7,7 +7,7 @@ export default async function TopBar() {
   const user = session?.user;
 
   return (
-    <header className="top-bar pressable">
+    <header className="top-bar">
       <Link href="/" className="brand">
         <div className="brand-mark">NL</div>
         <div>

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Toast from "@/src/components/Toast";
+import ScrollableTable from "@/src/components/ScrollableTable";
 import DraftPreview from "@/src/components/DraftPreview";
 import {
   bulkUpdateCampaignContactExclusions,
@@ -568,7 +569,7 @@ export default function CampaignsWorkspace() {
       </aside>
 
       <section className="workspace-detail">
-        <div className="panel pressable">
+        <div className="panel pressable workspace-panel">
           <div className="panel-header">
             <h2>Campaign details</h2>
             <p>
@@ -784,70 +785,74 @@ export default function CampaignsWorkspace() {
                       ) : null}
                     </div>
                   </div>
-                  {audienceLoading ? (
-                    <p>Loading audience...</p>
-                  ) : audienceContacts.length === 0 ? (
-                    <p className="muted">No contacts in this audience.</p>
-                  ) : (
-                    <div className="audience-table">
-                      <div className="audience-row header">
-                        <span>
-                          <input
-                            type="checkbox"
-                            checked={allSelected}
-                            onChange={toggleAllAudienceSelection}
-                          />
-                        </span>
-                        <span>Name</span>
-                        <span>Email</span>
-                        <span>Source lists</span>
-                        <span>Included</span>
-                      </div>
-                      {audienceContacts.map((contact) => {
-                        const name = `${contact.firstName || ""} ${
-                          contact.lastName || ""
-                        }`.trim();
-                        const sourceNames = contact.sourceLists?.length
-                          ? contact.sourceLists
-                              .map((list) => list.name)
-                              .join(", ")
-                          : "-";
-                        return (
-                          <div
-                            key={contact.id}
-                            className={`audience-row ${
-                              contact.excluded ? "excluded" : ""
-                            }`}
-                          >
-                            <span>
-                              <input
-                                type="checkbox"
-                                checked={audienceSelection.includes(contact.id)}
-                                onChange={() =>
-                                  toggleAudienceSelection(contact.id)
-                                }
-                              />
-                            </span>
-                            <span>{name || "Unnamed"}</span>
-                            <span>{contact.email}</span>
-                            <span>{sourceNames}</span>
-                            <span>
-                              <input
-                                type="checkbox"
-                                checked={!contact.excluded}
-                                onChange={() =>
-                                  updateContactExclusion(
+                  <div className="table-section">
+                    {audienceLoading ? (
+                      <p>Loading audience...</p>
+                    ) : audienceContacts.length === 0 ? (
+                      <p className="muted">No contacts in this audience.</p>
+                    ) : (
+                      <ScrollableTable className="audience-table">
+                        <div className="audience-row header">
+                          <span>
+                            <input
+                              type="checkbox"
+                              checked={allSelected}
+                              onChange={toggleAllAudienceSelection}
+                            />
+                          </span>
+                          <span>Name</span>
+                          <span>Email</span>
+                          <span>Source lists</span>
+                          <span>Included</span>
+                        </div>
+                        {audienceContacts.map((contact) => {
+                          const name = `${contact.firstName || ""} ${
+                            contact.lastName || ""
+                          }`.trim();
+                          const sourceNames = contact.sourceLists?.length
+                            ? contact.sourceLists
+                                .map((list) => list.name)
+                                .join(", ")
+                            : "-";
+                          return (
+                            <div
+                              key={contact.id}
+                              className={`audience-row ${
+                                contact.excluded ? "excluded" : ""
+                              }`}
+                            >
+                              <span>
+                                <input
+                                  type="checkbox"
+                                  checked={audienceSelection.includes(
                                     contact.id,
-                                    !contact.excluded,
-                                  )
-                                }
-                              />
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
+                                  )}
+                                  onChange={() =>
+                                    toggleAudienceSelection(contact.id)
+                                  }
+                                />
+                              </span>
+                              <span>{name || "Unnamed"}</span>
+                              <span>{contact.email}</span>
+                              <span>{sourceNames}</span>
+                              <span>
+                                <input
+                                  type="checkbox"
+                                  checked={!contact.excluded}
+                                  onChange={() =>
+                                    updateContactExclusion(
+                                      contact.id,
+                                      !contact.excluded,
+                                    )
+                                  }
+                                />
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </ScrollableTable>
+                    )}
+                  </div>
                 </>
               )}
             </>
