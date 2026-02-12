@@ -364,7 +364,7 @@ export async function updateCampaignContactExclusion(
 
 export async function bulkUpdateCampaignContactExclusions(
   campaignId: string,
-  payload: { contactIds: number[]; excluded: boolean },
+  payload: { contactIds: number[]; exclude: boolean },
 ) {
   return apiPost<{ updated?: number }>(
     API_ENDPOINTS.campaignContactsExclusions(campaignId),

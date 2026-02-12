@@ -181,7 +181,7 @@ export async function toggleCampaignContactExclusion(
 
 export async function bulkUpdateCampaignContactExclusions(
   campaignId: number,
-  payload: { contactIds: number[]; excluded: boolean },
+  payload: { contactIds: number[]; exclude: boolean },
 ) {
   if (!campaignId) {
     return { error: "Missing campaign ID.", status: 400 };

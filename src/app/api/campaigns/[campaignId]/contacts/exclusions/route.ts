@@ -20,7 +20,7 @@ export async function POST(
     const body = await request.json();
     if (
       !Array.isArray(body?.contactIds) ||
-      typeof body?.excluded !== "boolean"
+      typeof body?.exclude !== "boolean"
     ) {
       return NextResponse.json(
         { error: "Invalid exclusions payload" },

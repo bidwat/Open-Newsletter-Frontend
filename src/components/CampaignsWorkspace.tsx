@@ -252,7 +252,7 @@ export default function CampaignsWorkspace() {
         if (excludedIds.length > 0) {
           const result = await bulkUpdateCampaignContactExclusions(selectedId, {
             contactIds: excludedIds,
-            excluded: true,
+            exclude: true,
           });
           if (result.error) {
             showBackendError(result.error, {
@@ -264,7 +264,7 @@ export default function CampaignsWorkspace() {
         if (includedIds.length > 0) {
           const result = await bulkUpdateCampaignContactExclusions(selectedId, {
             contactIds: includedIds,
-            excluded: false,
+            exclude: false,
           });
           if (result.error) {
             showBackendError(result.error, {
