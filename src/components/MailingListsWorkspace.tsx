@@ -2,7 +2,9 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Toast from "@/src/components/Toast";
-import ScrollableTable from "@/src/components/ScrollableTable";
+import ScrollableTable, {
+  type TableColumn,
+} from "@/src/components/ScrollableTable";
 import {
   addContact,
   copyMailingList,
@@ -459,6 +461,45 @@ export default function MailingListsWorkspace() {
     [sortedLists],
   );
 
+  const contactColumns: TableColumn<Contact>[] = [
+    {
+      key: "email",
+      header: "Email",
+      cell: (contact) => contact.email,
+    },
+    {
+      key: "name",
+      header: "Name",
+      cell: (contact) => (
+        <>
+          {contact.firstName || ""} {contact.lastName || ""}
+        </>
+      ),
+    },
+    {
+      key: "actions",
+      header: "Actions",
+      cell: (contact) => (
+        <span className="row-actions">
+          <button
+            type="button"
+            className="button secondary"
+            onClick={() => openEditContact(contact)}
+          >
+            Edit
+          </button>
+          <button
+            type="button"
+            className="button secondary action-delete"
+            onClick={() => handleRemoveContact(contact.id)}
+          >
+            Remove
+          </button>
+        </span>
+      ),
+    },
+  ];
+
   return (
     <div className="workspace-layout">
       <aside className="workspace-sidebar pressable">
@@ -589,41 +630,12 @@ export default function MailingListsWorkspace() {
               </div>
 
               <div className="table-section">
-                {contacts.length === 0 ? (
-                  <p className="muted">No contacts yet.</p>
-                ) : (
-                  <ScrollableTable>
-                    <div className="table-row table-head">
-                      <span>Email</span>
-                      <span>Name</span>
-                      <span>Actions</span>
-                    </div>
-                    {contacts.map((contact) => (
-                      <div key={contact.id} className="table-row">
-                        <span>{contact.email}</span>
-                        <span>
-                          {contact.firstName || ""} {contact.lastName || ""}
-                        </span>
-                        <span className="row-actions">
-                          <button
-                            type="button"
-                            className="button secondary"
-                            onClick={() => openEditContact(contact)}
-                          >
-                            Edit
-                          </button>
-                          <button
-                            type="button"
-                            className="button secondary action-delete"
-                            onClick={() => handleRemoveContact(contact.id)}
-                          >
-                            Remove
-                          </button>
-                        </span>
-                      </div>
-                    ))}
-                  </ScrollableTable>
-                )}
+                <ScrollableTable
+                  data={contacts}
+                  columns={contactColumns}
+                  rowKey={(contact) => contact.id}
+                  emptyState={<p className="muted">No contacts yet.</p>}
+                />
               </div>
             </>
           ) : (

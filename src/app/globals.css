@@ -959,33 +959,14 @@ button:disabled,
   flex-wrap: wrap;
 }
 
-.audience-table {
-  display: grid;
+.audience-table .table-row {
+  grid-template-columns: 32px minmax(180px, 1.2fr) minmax(200px, 1.6fr) 90px;
   gap: 10px;
 }
 
-.audience-row {
-  display: grid;
-  grid-template-columns:
-    32px minmax(120px, 1fr) minmax(160px, 1.4fr) minmax(160px, 1.4fr)
-    90px;
-  gap: 10px;
-  align-items: center;
-  border: var(--border);
-  padding: 10px 12px;
-  box-shadow: var(--shadow-soft);
-}
-
-.audience-row.excluded {
+.audience-table .table-row.excluded {
   opacity: 0.6;
   text-decoration: line-through;
-}
-
-.audience-row.header {
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  font-size: 0.75rem;
 }
 
 .audience-actions {

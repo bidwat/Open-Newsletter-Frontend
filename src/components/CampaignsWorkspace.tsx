@@ -2,7 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Toast from "@/src/components/Toast";
-import ScrollableTable from "@/src/components/ScrollableTable";
+import ScrollableTable, {
+  type TableColumn,
+} from "@/src/components/ScrollableTable";
 import DraftPreview from "@/src/components/DraftPreview";
 import {
   bulkUpdateCampaignContactExclusions,
@@ -450,20 +452,6 @@ export default function CampaignsWorkspace() {
     });
   };
 
-  const isSent = campaignStatus === "SENT";
-  const detailListOptions = mailingLists.map((list) => ({
-    id: String(list.id),
-    name: list.name,
-  }));
-
-  const selectedCount = audienceSelection.length;
-  const totalRecipients = audienceContacts.filter(
-    (contact) => !contact.excluded,
-  ).length;
-  const allSelected =
-    audienceContacts.length > 0 &&
-    audienceSelection.length === audienceContacts.length;
-
   const toggleAudienceSelection = (contactId: number) => {
     setAudienceSelection((current) =>
       current.includes(contactId)
@@ -480,6 +468,66 @@ export default function CampaignsWorkspace() {
 
     setAudienceSelection(audienceContacts.map((contact) => contact.id));
   };
+
+  const isSent = campaignStatus === "SENT";
+  const detailListOptions = mailingLists.map((list) => ({
+    id: String(list.id),
+    name: list.name,
+  }));
+
+  const selectedCount = audienceSelection.length;
+  const totalRecipients = audienceContacts.filter(
+    (contact) => !contact.excluded,
+  ).length;
+  const allSelected =
+    audienceContacts.length > 0 &&
+    audienceSelection.length === audienceContacts.length;
+
+  const audienceColumns: TableColumn<CampaignAudienceContact>[] = [
+    {
+      key: "select",
+      header: (
+        <input
+          type="checkbox"
+          checked={allSelected}
+          onChange={toggleAllAudienceSelection}
+        />
+      ),
+      cell: (contact) => (
+        <input
+          type="checkbox"
+          checked={audienceSelection.includes(contact.id)}
+          onChange={() => toggleAudienceSelection(contact.id)}
+        />
+      ),
+    },
+    {
+      key: "name",
+      header: "Name",
+      cell: (contact) => {
+        const name = `${contact.firstName || ""} ${
+          contact.lastName || ""
+        }`.trim();
+        return name || "Unnamed";
+      },
+    },
+    {
+      key: "email",
+      header: "Email",
+      cell: (contact) => contact.email,
+    },
+    {
+      key: "included",
+      header: "Included",
+      cell: (contact) => (
+        <input
+          type="checkbox"
+          checked={!contact.excluded}
+          onChange={() => updateContactExclusion(contact.id, !contact.excluded)}
+        />
+      ),
+    },
+  ];
 
   const updateContactExclusion = (contactId: number, excluded: boolean) => {
     setAudienceContacts((current) =>
@@ -788,69 +836,19 @@ export default function CampaignsWorkspace() {
                   <div className="table-section">
                     {audienceLoading ? (
                       <p>Loading audience...</p>
-                    ) : audienceContacts.length === 0 ? (
-                      <p className="muted">No contacts in this audience.</p>
                     ) : (
-                      <ScrollableTable className="audience-table">
-                        <div className="audience-row header">
-                          <span>
-                            <input
-                              type="checkbox"
-                              checked={allSelected}
-                              onChange={toggleAllAudienceSelection}
-                            />
-                          </span>
-                          <span>Name</span>
-                          <span>Email</span>
-                          <span>Source lists</span>
-                          <span>Included</span>
-                        </div>
-                        {audienceContacts.map((contact) => {
-                          const name = `${contact.firstName || ""} ${
-                            contact.lastName || ""
-                          }`.trim();
-                          const sourceNames = contact.sourceLists?.length
-                            ? contact.sourceLists
-                                .map((list) => list.name)
-                                .join(", ")
-                            : "-";
-                          return (
-                            <div
-                              key={contact.id}
-                              className={`audience-row ${
-                                contact.excluded ? "excluded" : ""
-                              }`}
-                            >
-                              <span>
-                                <input
-                                  type="checkbox"
-                                  checked={audienceSelection.includes(
-                                    contact.id,
-                                  )}
-                                  onChange={() =>
-                                    toggleAudienceSelection(contact.id)
-                                  }
-                                />
-                              </span>
-                              <span>{name || "Unnamed"}</span>
-                              <span>{contact.email}</span>
-                              <span>{sourceNames}</span>
-                              <span>
-                                <input
-                                  type="checkbox"
-                                  checked={!contact.excluded}
-                                  onChange={() =>
-                                    updateContactExclusion(
-                                      contact.id,
-                                      !contact.excluded,
-                                    )
-                                  }
-                                />
-                              </span>
-                            </div>
-                          );
-                        })}
-                      </ScrollableTable>
+                      <ScrollableTable
+                        data={audienceContacts}
+                        columns={audienceColumns}
+                        rowKey={(contact) => contact.id}
+                        emptyState={
+                          <p className="muted">No contacts in this audience.</p>
+                        }
+                        className="audience-table"
+                        rowClassName={(contact) =>
+                          contact.excluded ? "excluded" : ""
+                        }
+                      />
                     )}
                   </div>
                 </>
