@@ -777,6 +777,22 @@ button:disabled,
   animation: toast-fade 2.4s ease forwards;
 }
 
+.toast-success {
+  background: #e6f5e6;
+}
+
+.toast-warning {
+  background: #ffe3e3;
+}
+
+.toast-error {
+  background: #ffd6d6;
+}
+
+.toast-info {
+  background: #e6f1ff;
+}
+
 @keyframes toast-fade {
   0% {
     opacity: 0;
@@ -921,7 +937,10 @@ button:disabled,
 
 .audience-row {
   display: grid;
-  grid-template-columns: 32px minmax(120px, 1fr) minmax(160px, 1.4fr) minmax(160px, 1.4fr) 90px;
+  grid-template-columns: 32px minmax(120px, 1fr) minmax(160px, 1.4fr) minmax(
+      160px,
+      1.4fr
+    ) 90px;
   gap: 10px;
   align-items: center;
   border: var(--border);

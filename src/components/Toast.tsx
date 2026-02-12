@@ -4,12 +4,14 @@ import { useEffect } from "react";
 
 interface ToastProps {
   message: string;
+  tone?: "success" | "warning" | "error" | "info";
   onDismiss: () => void;
   durationMs?: number;
 }
 
 export default function Toast({
   message,
+  tone = "success",
   onDismiss,
   durationMs = 2400,
 }: ToastProps) {
@@ -22,7 +24,7 @@ export default function Toast({
   }, [durationMs, onDismiss]);
 
   return (
-    <div className="toast" role="status" aria-live="polite">
+    <div className={`toast toast-${tone}`} role="status" aria-live="polite">
       {message}
     </div>
   );

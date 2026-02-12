@@ -39,14 +39,16 @@ interface ErrorDialogState {
   onAction?: () => void | Promise<void>;
 }
 
+type ToastTone = "success" | "warning" | "error" | "info";
+
 export default function MailingListsWorkspace() {
   const [lists, setLists] = useState<MailingList[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [selectedList, setSelectedList] = useState<MailingList | null>(null);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [counts, setCounts] = useState<ContactCounts>({});
-  const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastTone, setToastTone] = useState<ToastTone>("success");
   const [loading, setLoading] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -83,6 +85,11 @@ export default function MailingListsWorkspace() {
     } catch (parseError) {
       return error;
     }
+  };
+
+  const showToast = (message: string, tone: ToastTone = "success") => {
+    setToastTone(tone);
+    setToastMessage(message);
   };
 
   const showBackendError = (
@@ -168,7 +175,7 @@ export default function MailingListsWorkspace() {
 
   const handleCreateList = async () => {
     if (!createForm.name.trim()) {
-      setStatusMessage("List name is required.");
+      showToast("List name is required.", "warning");
       return;
     }
 
@@ -182,7 +189,7 @@ export default function MailingListsWorkspace() {
       return;
     }
 
-    setToastMessage("Mailing list created.");
+    showToast("Mailing list created.");
     setCreateForm({ name: "", description: "" });
     setShowCreateModal(false);
     await loadLists();
@@ -190,12 +197,12 @@ export default function MailingListsWorkspace() {
 
   const handleAddContact = async () => {
     if (!selectedId) {
-      setStatusMessage("Select a list to add contacts.");
+      showToast("Select a list to add contacts.", "warning");
       return;
     }
 
     if (!contactForm.email.trim()) {
-      setStatusMessage("Email is required.");
+      showToast("Email is required.", "warning");
       return;
     }
 
@@ -211,7 +218,7 @@ export default function MailingListsWorkspace() {
     }
 
     setContactForm({ email: "", firstName: "", lastName: "" });
-    setToastMessage("Contact added.");
+    showToast("Contact added.");
     setShowAddContactModal(false);
     await loadDetails(selectedId);
     await loadLists();
@@ -219,7 +226,7 @@ export default function MailingListsWorkspace() {
 
   const handleCopyList = async () => {
     if (!selectedId) {
-      setStatusMessage("Select a list to copy.");
+      showToast("Select a list to copy.", "warning");
       return;
     }
 
@@ -229,7 +236,7 @@ export default function MailingListsWorkspace() {
       return;
     }
 
-    setToastMessage("List copied.");
+    showToast("List copied.");
     await loadLists();
     if (result.data?.id) {
       setSelectedId(result.data.id);
@@ -238,7 +245,7 @@ export default function MailingListsWorkspace() {
 
   const handleToggleHidden = async () => {
     if (!selectedId || !selectedList) {
-      setStatusMessage("Select a list to update.");
+      showToast("Select a list to update.", "warning");
       return;
     }
 
@@ -253,14 +260,14 @@ export default function MailingListsWorkspace() {
       return;
     }
 
-    setToastMessage(nextHidden ? "List hidden." : "List restored.");
+    showToast(nextHidden ? "List hidden." : "List restored.");
     await loadLists();
     await loadDetails(selectedId);
   };
 
   const handleDeleteList = async () => {
     if (!selectedId) {
-      setStatusMessage("Select a list to delete.");
+      showToast("Select a list to delete.", "warning");
       return;
     }
 
@@ -295,7 +302,7 @@ export default function MailingListsWorkspace() {
                     });
                     return;
                   }
-                  setToastMessage("List hidden.");
+                  showToast("List hidden.");
                   await loadLists();
                   await loadDetails(selectedId);
                 }
@@ -304,7 +311,7 @@ export default function MailingListsWorkspace() {
           return;
         }
 
-        setToastMessage("Mailing list deleted.");
+        showToast("Mailing list deleted.");
         setSelectedId(null);
         await loadLists();
       },
@@ -313,7 +320,7 @@ export default function MailingListsWorkspace() {
 
   const handleImportNewList = async () => {
     if (!importFile) {
-      setStatusMessage("Choose a CSV file to import.");
+      showToast("Choose a CSV file to import.", "warning");
       return;
     }
 
@@ -326,7 +333,7 @@ export default function MailingListsWorkspace() {
       return;
     }
 
-    setToastMessage(
+    showToast(
       `Imported ${result.data?.imported ?? 0} contacts (skipped ${
         result.data?.skipped ?? 0
       }).`,
@@ -341,12 +348,12 @@ export default function MailingListsWorkspace() {
 
   const handleImportToList = async () => {
     if (!selectedId) {
-      setStatusMessage("Select a list to import contacts.");
+      showToast("Select a list to import contacts.", "warning");
       return;
     }
 
     if (!importTargetFile) {
-      setStatusMessage("Choose a CSV file to import.");
+      showToast("Choose a CSV file to import.", "warning");
       return;
     }
 
@@ -359,7 +366,7 @@ export default function MailingListsWorkspace() {
       return;
     }
 
-    setToastMessage(
+    showToast(
       `Imported ${result.data?.imported ?? 0} contacts (skipped ${
         result.data?.skipped ?? 0
       }).`,
@@ -381,7 +388,7 @@ export default function MailingListsWorkspace() {
 
   const handleUpdateContact = async () => {
     if (!selectedId || !contactEdit) {
-      setStatusMessage("Select a contact to update.");
+      showToast("Select a contact to update.", "warning");
       return;
     }
 
@@ -400,7 +407,7 @@ export default function MailingListsWorkspace() {
       return;
     }
 
-    setToastMessage("Contact updated.");
+    showToast("Contact updated.");
     setContactEdit(null);
     await loadDetails(selectedId);
     await loadLists();
@@ -408,7 +415,7 @@ export default function MailingListsWorkspace() {
 
   const handleRemoveContact = async (contactId: number) => {
     if (!selectedId) {
-      setStatusMessage("Select a list to remove contacts.");
+      showToast("Select a list to remove contacts.", "warning");
       return;
     }
 
@@ -429,7 +436,7 @@ export default function MailingListsWorkspace() {
           return;
         }
 
-        setToastMessage("Contact removed.");
+        showToast("Contact removed.");
         await loadDetails(selectedId);
         await loadLists();
       },
@@ -620,10 +627,6 @@ export default function MailingListsWorkspace() {
             <p className="muted">Select a list to see details.</p>
           )}
         </div>
-
-        {statusMessage ? (
-          <p className="status-message inline">{statusMessage}</p>
-        ) : null}
 
         {showCreateModal ? (
           <div className="modal-overlay" role="dialog" aria-modal="true">
@@ -939,7 +942,11 @@ export default function MailingListsWorkspace() {
       </section>
 
       {toastMessage ? (
-        <Toast message={toastMessage} onDismiss={() => setToastMessage(null)} />
+        <Toast
+          message={toastMessage}
+          tone={toastTone}
+          onDismiss={() => setToastMessage(null)}
+        />
       ) : null}
     </div>
   );

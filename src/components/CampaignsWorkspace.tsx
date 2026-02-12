@@ -36,6 +36,8 @@ const emptyForm = {
 
 type DetailTab = "details" | "audience";
 
+type ToastTone = "success" | "warning" | "error" | "info";
+
 interface ConfirmDialogState {
   title: string;
   message: string;
@@ -56,7 +58,6 @@ export default function CampaignsWorkspace() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [mailingLists, setMailingLists] = useState<MailingList[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
-  const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
   const [filter, setFilter] = useState<FilterMode>("all");
@@ -66,6 +67,7 @@ export default function CampaignsWorkspace() {
   const [campaignStatus, setCampaignStatus] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(true);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastTone, setToastTone] = useState<ToastTone>("success");
   const [activeDetailTab, setActiveDetailTab] = useState<DetailTab>("details");
   const [audienceContacts, setAudienceContacts] = useState<
     CampaignAudienceContact[]
@@ -79,6 +81,11 @@ export default function CampaignsWorkspace() {
     null,
   );
   const [errorDialog, setErrorDialog] = useState<ErrorDialogState | null>(null);
+
+  const showToast = (message: string, tone: ToastTone = "success") => {
+    setToastTone(tone);
+    setToastMessage(message);
+  };
 
   const parseBackendErrorMessage = (error: string) => {
     try {
@@ -301,12 +308,12 @@ export default function CampaignsWorkspace() {
       .map((id) => Number(id))
       .filter((id) => Number.isFinite(id));
     if (!createForm.name.trim() || listIds.length === 0) {
-      setStatusMessage("Name and at least one mailing list are required.");
+      showToast("Name and at least one mailing list are required.", "warning");
       return;
     }
 
     if (listIds.length === 0) {
-      setStatusMessage("Select at least one valid mailing list.");
+      showToast("Select at least one valid mailing list.", "warning");
       return;
     }
 
@@ -330,7 +337,7 @@ export default function CampaignsWorkspace() {
       return;
     }
 
-    setToastMessage("Campaign draft created.");
+    showToast("Campaign draft created.");
     setCreateForm(emptyForm);
     setShowCreateModal(false);
     await loadCampaigns();
@@ -341,7 +348,7 @@ export default function CampaignsWorkspace() {
 
   const handleUpdate = async () => {
     if (!selectedId) {
-      setStatusMessage("Select a campaign to update.");
+      showToast("Select a campaign to update.", "warning");
       return;
     }
 
@@ -370,7 +377,7 @@ export default function CampaignsWorkspace() {
       return;
     }
 
-    setToastMessage("Campaign updated.");
+    showToast("Campaign updated.");
     await loadCampaigns();
     await loadDetails(selectedId);
     if (activeDetailTab === "audience") {
@@ -380,7 +387,7 @@ export default function CampaignsWorkspace() {
 
   const handleSend = async () => {
     if (!selectedId) {
-      setStatusMessage("Select a campaign to send.");
+      showToast("Select a campaign to send.", "warning");
       return;
     }
 
@@ -390,14 +397,14 @@ export default function CampaignsWorkspace() {
       return;
     }
 
-    setToastMessage("Campaign send initiated.");
+    showToast("Campaign send initiated.");
     await loadCampaigns();
     await loadDetails(selectedId);
   };
 
   const handleCopy = async () => {
     if (!selectedId) {
-      setStatusMessage("Select a campaign to copy.");
+      showToast("Select a campaign to copy.", "warning");
       return;
     }
 
@@ -407,7 +414,7 @@ export default function CampaignsWorkspace() {
       return;
     }
 
-    setToastMessage("Campaign copy created.");
+    showToast("Campaign copy created.");
     await loadCampaigns();
     if (result.data?.id) {
       setSelectedId(result.data.id);
@@ -416,7 +423,7 @@ export default function CampaignsWorkspace() {
 
   const handleDelete = async () => {
     if (!selectedId) {
-      setStatusMessage("Select a campaign to delete.");
+      showToast("Select a campaign to delete.", "warning");
       return;
     }
 
@@ -435,7 +442,7 @@ export default function CampaignsWorkspace() {
           return;
         }
 
-        setToastMessage("Campaign deleted.");
+        showToast("Campaign deleted.");
         setSelectedId(null);
         await loadCampaigns();
       },
@@ -849,10 +856,6 @@ export default function CampaignsWorkspace() {
           )}
         </div>
 
-        {statusMessage ? (
-          <p className="status-message inline">{statusMessage}</p>
-        ) : null}
-
         {showCreateModal ? (
           <div className="modal-overlay" role="dialog" aria-modal="true">
             <div className="modal pressable">
@@ -1030,7 +1033,11 @@ export default function CampaignsWorkspace() {
         ) : null}
       </section>
       {toastMessage ? (
-        <Toast message={toastMessage} onDismiss={() => setToastMessage(null)} />
+        <Toast
+          message={toastMessage}
+          tone={toastTone}
+          onDismiss={() => setToastMessage(null)}
+        />
       ) : null}
     </div>
   );
