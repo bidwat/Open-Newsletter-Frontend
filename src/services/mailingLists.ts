@@ -2,6 +2,7 @@ export interface MailingList {
   id: number;
   name: string;
   description?: string;
+  hidden?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -110,6 +111,20 @@ export async function deleteMailingList(listId: string) {
   });
 
   return parseResponse<{ message?: string }>(response);
+}
+
+export async function toggleMailingListHidden(listId: string, hidden: boolean) {
+  if (!listId) {
+    return { error: "Missing list ID.", status: 400 };
+  }
+
+  const response = await fetch(`/api/mailing-lists/${listId}/hidden`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ hidden }),
+  });
+
+  return parseResponse<MailingList>(response);
 }
 
 export async function copyMailingList(listId: string) {

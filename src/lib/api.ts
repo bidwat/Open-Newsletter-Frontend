@@ -15,6 +15,8 @@ export const API_ENDPOINTS = {
   mailingLists: `${CORE_API_PREFIX}/mailing-lists`,
   mailingListById: (listId: string) =>
     `${CORE_API_PREFIX}/mailing-lists/${listId}`,
+  mailingListHidden: (listId: string) =>
+    `${CORE_API_PREFIX}/mailing-lists/${listId}/hidden`,
   mailingListCopy: (listId: string) =>
     `${CORE_API_PREFIX}/mailing-lists/${listId}/copy`,
   mailingListWithContacts: (listId: string) =>
@@ -26,6 +28,12 @@ export const API_ENDPOINTS = {
     `${CORE_API_PREFIX}/mailing-lists/${listId}/contacts`,
   mailingListContactById: (listId: string, contactId: string) =>
     `${CORE_API_PREFIX}/mailing-lists/${listId}/contacts/${contactId}`,
+  campaignContacts: (campaignId: string) =>
+    `${CORE_API_PREFIX}/campaigns/${campaignId}/contacts`,
+  campaignContactExclusion: (campaignId: string, contactId: string) =>
+    `${CORE_API_PREFIX}/campaigns/${campaignId}/contacts/${contactId}/exclusion`,
+  campaignContactsExclusions: (campaignId: string) =>
+    `${CORE_API_PREFIX}/campaigns/${campaignId}/contacts/exclusions`,
 } as const;
 
 export interface CampaignDraftPayload {
@@ -62,6 +70,7 @@ export interface MailingList {
   id: number;
   name: string;
   description?: string;
+  hidden?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -82,6 +91,15 @@ export interface ImportResult {
   mailingListId: number;
   imported: number;
   skipped: number;
+}
+
+export interface CampaignAudienceContact {
+  id: number;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  excluded?: boolean;
+  sourceLists?: CampaignMailingList[];
 }
 
 interface ApiResponse<T> {
@@ -251,6 +269,12 @@ export async function deleteMailingList(listId: string) {
   });
 }
 
+export async function toggleMailingListHidden(listId: string, hidden: boolean) {
+  return apiPost<MailingList>(API_ENDPOINTS.mailingListHidden(listId), {
+    hidden,
+  });
+}
+
 export async function copyMailingList(listId: string) {
   return apiPost<MailingList>(API_ENDPOINTS.mailingListCopy(listId));
 }
@@ -318,5 +342,32 @@ export async function removeMailingListContact(
   return fetchWithAuth(
     `${API_ENDPOINTS.mailingListContactById(listId, contactId)}${suffix}`,
     { method: "DELETE" },
+  );
+}
+
+export async function fetchCampaignContacts(campaignId: string) {
+  return apiGet<CampaignAudienceContact[]>(
+    API_ENDPOINTS.campaignContacts(campaignId),
+  );
+}
+
+export async function updateCampaignContactExclusion(
+  campaignId: string,
+  contactId: string,
+  excluded: boolean,
+) {
+  return apiPost<CampaignAudienceContact>(
+    API_ENDPOINTS.campaignContactExclusion(campaignId, contactId),
+    { excluded },
+  );
+}
+
+export async function bulkUpdateCampaignContactExclusions(
+  campaignId: string,
+  payload: { contactIds: number[]; excluded: boolean },
+) {
+  return apiPost<{ updated?: number }>(
+    API_ENDPOINTS.campaignContactsExclusions(campaignId),
+    payload,
   );
 }

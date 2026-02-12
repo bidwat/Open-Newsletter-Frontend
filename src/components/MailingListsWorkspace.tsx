@@ -6,12 +6,14 @@ import {
   addContact,
   copyMailingList,
   createMailingList,
+  deleteMailingList,
   getMailingListWithContacts,
   importMailingList,
   importMailingListTo,
   listContacts,
   listMailingLists,
   removeContact,
+  toggleMailingListHidden,
   type Contact,
   type MailingList,
   updateContact,
@@ -19,6 +21,22 @@ import {
 
 interface ContactCounts {
   [listId: string]: number;
+}
+
+interface ConfirmDialogState {
+  title: string;
+  message: string;
+  confirmLabel: string;
+  confirmClassName?: string;
+  onConfirm: () => void | Promise<void>;
+}
+
+interface ErrorDialogState {
+  title: string;
+  message: string;
+  actionLabel?: string;
+  actionClassName?: string;
+  onAction?: () => void | Promise<void>;
 }
 
 export default function MailingListsWorkspace() {
@@ -49,13 +67,48 @@ export default function MailingListsWorkspace() {
     firstName: "",
     lastName: "",
   });
+  const [confirmDialog, setConfirmDialog] = useState<ConfirmDialogState | null>(
+    null,
+  );
+  const [errorDialog, setErrorDialog] = useState<ErrorDialogState | null>(null);
   const importContactsInputRef = useRef<HTMLInputElement | null>(null);
+
+  const parseBackendErrorMessage = (error: string) => {
+    try {
+      const parsed = JSON.parse(error) as {
+        message?: string;
+        error?: string;
+      };
+      return parsed.message || parsed.error || error;
+    } catch (parseError) {
+      return error;
+    }
+  };
+
+  const showBackendError = (
+    error: string,
+    options?: {
+      title?: string;
+      actionLabel?: string;
+      actionClassName?: string;
+      onAction?: () => void | Promise<void>;
+    },
+  ) => {
+    const message = parseBackendErrorMessage(error);
+    setErrorDialog({
+      title: options?.title || "Something went wrong",
+      message,
+      actionLabel: options?.actionLabel,
+      actionClassName: options?.actionClassName,
+      onAction: options?.onAction,
+    });
+  };
 
   const loadLists = async () => {
     setLoading(true);
     const result = await listMailingLists();
     if (result.error) {
-      setStatusMessage(result.error);
+      showBackendError(result.error, { title: "Unable to load lists" });
       setLoading(false);
       return;
     }
@@ -99,7 +152,7 @@ export default function MailingListsWorkspace() {
     }
 
     if (listResult.error) {
-      setStatusMessage(listResult.error || null);
+      showBackendError(listResult.error, { title: "Unable to load list" });
     }
 
     setDetailLoading(false);
@@ -125,7 +178,7 @@ export default function MailingListsWorkspace() {
     });
 
     if (result.error) {
-      setStatusMessage(result.error);
+      showBackendError(result.error, { title: "Unable to create list" });
       return;
     }
 
@@ -153,7 +206,7 @@ export default function MailingListsWorkspace() {
     });
 
     if (result.error) {
-      setStatusMessage(result.error);
+      showBackendError(result.error, { title: "Unable to add contact" });
       return;
     }
 
@@ -172,7 +225,7 @@ export default function MailingListsWorkspace() {
 
     const result = await copyMailingList(String(selectedId));
     if (result.error) {
-      setStatusMessage(result.error);
+      showBackendError(result.error, { title: "Unable to copy list" });
       return;
     }
 
@@ -181,6 +234,81 @@ export default function MailingListsWorkspace() {
     if (result.data?.id) {
       setSelectedId(result.data.id);
     }
+  };
+
+  const handleToggleHidden = async () => {
+    if (!selectedId || !selectedList) {
+      setStatusMessage("Select a list to update.");
+      return;
+    }
+
+    const nextHidden = !selectedList.hidden;
+    const result = await toggleMailingListHidden(
+      String(selectedId),
+      nextHidden,
+    );
+
+    if (result.error) {
+      showBackendError(result.error, { title: "Unable to update list" });
+      return;
+    }
+
+    setToastMessage(nextHidden ? "List hidden." : "List restored.");
+    await loadLists();
+    await loadDetails(selectedId);
+  };
+
+  const handleDeleteList = async () => {
+    if (!selectedId) {
+      setStatusMessage("Select a list to delete.");
+      return;
+    }
+
+    setConfirmDialog({
+      title: "Delete mailing list",
+      message: "Delete this mailing list? This cannot be undone.",
+      confirmLabel: "Delete list",
+      confirmClassName: "action-delete",
+      onConfirm: async () => {
+        setConfirmDialog(null);
+        const result = await deleteMailingList(String(selectedId));
+        if (result.error) {
+          const message = parseBackendErrorMessage(result.error);
+          const normalized = message.toLowerCase();
+          const canHide =
+            normalized.includes("used by campaigns") ||
+            normalized.includes("hide it");
+          showBackendError(result.error, {
+            title: "Unable to delete list",
+            actionLabel: canHide ? "Hide list" : undefined,
+            actionClassName: canHide ? "action-hidden" : undefined,
+            onAction: canHide
+              ? async () => {
+                  setErrorDialog(null);
+                  const hiddenResult = await toggleMailingListHidden(
+                    String(selectedId),
+                    true,
+                  );
+                  if (hiddenResult.error) {
+                    showBackendError(hiddenResult.error, {
+                      title: "Unable to hide list",
+                    });
+                    return;
+                  }
+                  setToastMessage("List hidden.");
+                  await loadLists();
+                  await loadDetails(selectedId);
+                }
+              : undefined,
+          });
+          return;
+        }
+
+        setToastMessage("Mailing list deleted.");
+        setSelectedId(null);
+        await loadLists();
+      },
+    });
   };
 
   const handleImportNewList = async () => {
@@ -194,7 +322,7 @@ export default function MailingListsWorkspace() {
 
     const result = await importMailingList(formData);
     if (result.error) {
-      setStatusMessage(result.error);
+      showBackendError(result.error, { title: "Unable to import list" });
       return;
     }
 
@@ -227,7 +355,7 @@ export default function MailingListsWorkspace() {
 
     const result = await importMailingListTo(String(selectedId), formData);
     if (result.error) {
-      setStatusMessage(result.error);
+      showBackendError(result.error, { title: "Unable to import contacts" });
       return;
     }
 
@@ -268,7 +396,7 @@ export default function MailingListsWorkspace() {
     );
 
     if (result.error) {
-      setStatusMessage(result.error);
+      showBackendError(result.error, { title: "Unable to update contact" });
       return;
     }
 
@@ -284,29 +412,43 @@ export default function MailingListsWorkspace() {
       return;
     }
 
-    const confirmed = window.confirm("Remove this contact from the list?");
-    if (!confirmed) {
-      return;
-    }
+    setConfirmDialog({
+      title: "Remove contact",
+      message: "Remove this contact from the list?",
+      confirmLabel: "Remove contact",
+      confirmClassName: "action-delete",
+      onConfirm: async () => {
+        setConfirmDialog(null);
+        const result = await removeContact(
+          String(selectedId),
+          String(contactId),
+          true,
+        );
+        if (result.error) {
+          showBackendError(result.error, { title: "Unable to remove contact" });
+          return;
+        }
 
-    const result = await removeContact(
-      String(selectedId),
-      String(contactId),
-      true,
-    );
-    if (result.error) {
-      setStatusMessage(result.error);
-      return;
-    }
-
-    setToastMessage("Contact removed.");
-    await loadDetails(selectedId);
-    await loadLists();
+        setToastMessage("Contact removed.");
+        await loadDetails(selectedId);
+        await loadLists();
+      },
+    });
   };
 
   const sortedLists = useMemo(
     () => [...lists].sort((a, b) => a.name.localeCompare(b.name)),
     [lists],
+  );
+
+  const activeLists = useMemo(
+    () => sortedLists.filter((list) => !list.hidden),
+    [sortedLists],
+  );
+
+  const hiddenLists = useMemo(
+    () => sortedLists.filter((list) => list.hidden),
+    [sortedLists],
   );
 
   return (
@@ -331,19 +473,44 @@ export default function MailingListsWorkspace() {
           Import list
         </button>
         <div className="sidebar-list">
-          {sortedLists.map((list) => (
-            <button
-              key={list.id}
-              type="button"
-              className={`sidebar-item ${
-                selectedId === list.id ? "active" : ""
-              }`}
-              onClick={() => setSelectedId(list.id)}
-            >
-              <span>{list.name}</span>
-              <span className="pill-small">{counts[list.id] ?? 0}</span>
-            </button>
-          ))}
+          <div className="sidebar-section">
+            <p className="sidebar-section-title">Active</p>
+            {activeLists.map((list) => (
+              <button
+                key={list.id}
+                type="button"
+                className={`sidebar-item ${
+                  selectedId === list.id ? "active" : ""
+                }`}
+                onClick={() => setSelectedId(list.id)}
+              >
+                <span>{list.name}</span>
+                <span className="pill-small">{counts[list.id] ?? 0}</span>
+              </button>
+            ))}
+            {!loading && activeLists.length === 0 ? (
+              <p className="muted">No active lists.</p>
+            ) : null}
+          </div>
+          <div className="sidebar-section">
+            <p className="sidebar-section-title">Hidden</p>
+            {hiddenLists.map((list) => (
+              <button
+                key={list.id}
+                type="button"
+                className={`sidebar-item ${
+                  selectedId === list.id ? "active" : ""
+                }`}
+                onClick={() => setSelectedId(list.id)}
+              >
+                <span>{list.name}</span>
+                <span className="pill-small">{counts[list.id] ?? 0}</span>
+              </button>
+            ))}
+            {!loading && hiddenLists.length === 0 ? (
+              <p className="muted">No hidden lists.</p>
+            ) : null}
+          </div>
           {!loading && sortedLists.length === 0 ? (
             <p className="muted">No lists yet.</p>
           ) : null}
@@ -373,6 +540,22 @@ export default function MailingListsWorkspace() {
               <div className="row-actions">
                 <button type="button" onClick={handleCopyList}>
                   Copy list
+                </button>
+                <button
+                  type="button"
+                  className={`action-hidden ${
+                    selectedList.hidden ? "active" : ""
+                  }`}
+                  onClick={handleToggleHidden}
+                >
+                  {selectedList.hidden ? "Unhide list" : "Hide list"}
+                </button>
+                <button
+                  type="button"
+                  className="action-delete"
+                  onClick={handleDeleteList}
+                >
+                  Delete list
                 </button>
               </div>
               <div className="divider" />
@@ -422,7 +605,7 @@ export default function MailingListsWorkspace() {
                         </button>
                         <button
                           type="button"
-                          className="button secondary"
+                          className="button secondary action-delete"
                           onClick={() => handleRemoveContact(contact.id)}
                         >
                           Remove
@@ -482,7 +665,11 @@ export default function MailingListsWorkspace() {
                 >
                   Cancel
                 </button>
-                <button type="button" onClick={handleCreateList}>
+                <button
+                  type="button"
+                  className="action-save"
+                  onClick={handleCreateList}
+                >
                   Create list
                 </button>
               </div>
@@ -574,7 +761,11 @@ export default function MailingListsWorkspace() {
                 >
                   Cancel
                 </button>
-                <button type="button" onClick={handleAddContact}>
+                <button
+                  type="button"
+                  className="action-save"
+                  onClick={handleAddContact}
+                >
                   Add contact
                 </button>
               </div>
@@ -678,9 +869,69 @@ export default function MailingListsWorkspace() {
                 >
                   Cancel
                 </button>
-                <button type="button" onClick={handleUpdateContact}>
+                <button
+                  type="button"
+                  className="action-save"
+                  onClick={handleUpdateContact}
+                >
                   Save contact
                 </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        {confirmDialog ? (
+          <div className="modal-overlay" role="dialog" aria-modal="true">
+            <div className="modal pressable">
+              <h3>{confirmDialog.title}</h3>
+              <p>{confirmDialog.message}</p>
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="button secondary"
+                  onClick={() => setConfirmDialog(null)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className={confirmDialog.confirmClassName}
+                  onClick={async () => {
+                    await confirmDialog.onConfirm();
+                  }}
+                >
+                  {confirmDialog.confirmLabel}
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        {errorDialog ? (
+          <div className="modal-overlay" role="dialog" aria-modal="true">
+            <div className="modal pressable">
+              <h3>{errorDialog.title}</h3>
+              <p>{errorDialog.message}</p>
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="button secondary"
+                  onClick={() => setErrorDialog(null)}
+                >
+                  Close
+                </button>
+                {errorDialog.actionLabel && errorDialog.onAction ? (
+                  <button
+                    type="button"
+                    className={errorDialog.actionClassName}
+                    onClick={async () => {
+                      await errorDialog.onAction?.();
+                    }}
+                  >
+                    {errorDialog.actionLabel}
+                  </button>
+                ) : null}
               </div>
             </div>
           </div>

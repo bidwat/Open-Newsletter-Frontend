@@ -467,6 +467,42 @@ button,
     transform 0.2s ease;
 }
 
+button.action-save,
+.button.action-save,
+button.action-hidden,
+.button.action-hidden,
+button.action-delete,
+.button.action-delete {
+  background: var(--paper);
+}
+
+button.action-save:hover,
+.button.action-save:hover,
+button.action-save:focus-visible,
+.button.action-save:focus-visible,
+button.action-save.active,
+.button.action-save.active {
+  background: #d7f5da;
+}
+
+button.action-hidden:hover,
+.button.action-hidden:hover,
+button.action-hidden:focus-visible,
+.button.action-hidden:focus-visible,
+button.action-hidden.active,
+.button.action-hidden.active {
+  background: #fff3bf;
+}
+
+button.action-delete:hover,
+.button.action-delete:hover,
+button.action-delete:focus-visible,
+.button.action-delete:focus-visible,
+button.action-delete.active,
+.button.action-delete.active {
+  background: #ffd7d7;
+}
+
 .button.secondary {
   background: var(--paper);
 }
@@ -825,6 +861,87 @@ button:disabled,
 }
 
 .row-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tab-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tab-button {
+  border: var(--border);
+  background: var(--paper);
+  padding: 6px 14px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--shadow-soft);
+  transition:
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.tab-button.active,
+.tab-button:hover,
+.tab-button:focus-visible {
+  box-shadow: var(--shadow-strong);
+  transform: translate(-2px, -2px);
+}
+
+.sidebar-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sidebar-section-title {
+  margin: 4px 0 0;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.7;
+}
+
+.audience-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.audience-table {
+  display: grid;
+  gap: 10px;
+}
+
+.audience-row {
+  display: grid;
+  grid-template-columns: 32px minmax(120px, 1fr) minmax(160px, 1.4fr) minmax(160px, 1.4fr) 90px;
+  gap: 10px;
+  align-items: center;
+  border: var(--border);
+  padding: 10px 12px;
+  box-shadow: var(--shadow-soft);
+}
+
+.audience-row.excluded {
+  opacity: 0.6;
+  text-decoration: line-through;
+}
+
+.audience-row.header {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.75rem;
+}
+
+.audience-actions {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;

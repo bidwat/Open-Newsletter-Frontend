@@ -28,6 +28,15 @@ export interface Campaign {
   updatedAt?: string;
 }
 
+export interface CampaignAudienceContact {
+  id: number;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  excluded?: boolean;
+  sourceLists?: CampaignMailingList[];
+}
+
 interface ClientApiResponse<T> {
   data?: T;
   error?: string;
@@ -135,4 +144,57 @@ export async function deleteCampaign(campaignId: number) {
   });
 
   return parseResponse<{ message?: string }>(response);
+}
+
+export async function getCampaignContacts(campaignId: number) {
+  if (!campaignId) {
+    return { error: "Missing campaign ID.", status: 400 };
+  }
+
+  const response = await fetch(`/api/campaigns/${campaignId}/contacts`, {
+    method: "GET",
+  });
+
+  return parseResponse<CampaignAudienceContact[]>(response);
+}
+
+export async function toggleCampaignContactExclusion(
+  campaignId: number,
+  contactId: number,
+  excluded: boolean,
+) {
+  if (!campaignId || !contactId) {
+    return { error: "Missing campaign or contact ID.", status: 400 };
+  }
+
+  const response = await fetch(
+    `/api/campaigns/${campaignId}/contacts/${contactId}/exclusion`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ excluded }),
+    },
+  );
+
+  return parseResponse<CampaignAudienceContact>(response);
+}
+
+export async function bulkUpdateCampaignContactExclusions(
+  campaignId: number,
+  payload: { contactIds: number[]; excluded: boolean },
+) {
+  if (!campaignId) {
+    return { error: "Missing campaign ID.", status: 400 };
+  }
+
+  const response = await fetch(
+    `/api/campaigns/${campaignId}/contacts/exclusions`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    },
+  );
+
+  return parseResponse<{ updated?: number }>(response);
 }
