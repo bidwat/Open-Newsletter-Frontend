@@ -6,6 +6,7 @@ import ScrollableTable, {
   type TableColumn,
 } from "@/src/components/ScrollableTable";
 import ImportFileActions from "@/src/components/ImportFileActions";
+import Toggle from "@/src/components/Toggle";
 import {
   addContact,
   copyMailingList,
@@ -58,6 +59,7 @@ export default function MailingListsWorkspace() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showAddContactModal, setShowAddContactModal] = useState(false);
   const [showImportContactsModal, setShowImportContactsModal] = useState(false);
+  const [showHidden, setShowHidden] = useState(false);
   const [createForm, setCreateForm] = useState({ name: "", description: "" });
   const [contactForm, setContactForm] = useState({
     email: "",
@@ -508,7 +510,14 @@ export default function MailingListsWorkspace() {
     <div className="workspace-layout">
       <aside className="workspace-sidebar pressable">
         <div className="sidebar-header">
-          <h2>Mailing lists</h2>
+          <div className="sidebar-header-row">
+            <h2>Mailing lists</h2>
+            <Toggle
+              label="Hidden"
+              checked={showHidden}
+              onChange={setShowHidden}
+            />
+          </div>
           <p>{loading ? "Loading..." : `${lists.length} total`}</p>
         </div>
         <button
@@ -541,25 +550,27 @@ export default function MailingListsWorkspace() {
               <p className="muted">No active lists.</p>
             ) : null}
           </div>
-          <div className="sidebar-section">
-            <p className="sidebar-section-title">Hidden</p>
-            {hiddenLists.map((list) => (
-              <button
-                key={list.id}
-                type="button"
-                className={`sidebar-item ${
-                  selectedId === list.id ? "active" : ""
-                }`}
-                onClick={() => setSelectedId(list.id)}
-              >
-                <span>{list.name}</span>
-                <span className="pill-small">{counts[list.id] ?? 0}</span>
-              </button>
-            ))}
-            {!loading && hiddenLists.length === 0 ? (
-              <p className="muted">No hidden lists.</p>
-            ) : null}
-          </div>
+          {showHidden ? (
+            <div className="sidebar-section">
+              <p className="sidebar-section-title">Hidden</p>
+              {hiddenLists.map((list) => (
+                <button
+                  key={list.id}
+                  type="button"
+                  className={`sidebar-item ${
+                    selectedId === list.id ? "active" : ""
+                  }`}
+                  onClick={() => setSelectedId(list.id)}
+                >
+                  <span>{list.name}</span>
+                  <span className="pill-small">{counts[list.id] ?? 0}</span>
+                </button>
+              ))}
+              {!loading && hiddenLists.length === 0 ? (
+                <p className="muted">No hidden lists.</p>
+              ) : null}
+            </div>
+          ) : null}
           {!loading && sortedLists.length === 0 ? (
             <p className="muted">No lists yet.</p>
           ) : null}
