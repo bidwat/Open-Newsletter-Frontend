@@ -530,45 +530,53 @@ export default function MailingListsWorkspace() {
         >
           New list
         </button>
-        <div className="sidebar-list">
+        <div className={`sidebar-sections ${showHidden ? "split" : ""}`}>
           <div className="sidebar-section">
             <p className="sidebar-section-title">Active</p>
-            {activeLists.map((list) => (
-              <button
-                key={list.id}
-                type="button"
-                className={`sidebar-item ${
-                  selectedId === list.id ? "active" : ""
-                }`}
-                onClick={() => setSelectedId(list.id)}
-              >
-                <span>{list.name}</span>
-                <span className="pill-small">{counts[list.id] ?? 0}</span>
-              </button>
-            ))}
-            {!loading && activeLists.length === 0 ? (
-              <p className="muted">No active lists.</p>
-            ) : null}
+            <div className="sidebar-scroll">
+              <div className="sidebar-list">
+                {activeLists.map((list) => (
+                  <button
+                    key={list.id}
+                    type="button"
+                    className={`sidebar-item ${
+                      selectedId === list.id ? "active" : ""
+                    }`}
+                    onClick={() => setSelectedId(list.id)}
+                  >
+                    <span>{list.name}</span>
+                    <span className="pill-small">{counts[list.id] ?? 0}</span>
+                  </button>
+                ))}
+                {!loading && activeLists.length === 0 ? (
+                  <p className="muted">No active lists.</p>
+                ) : null}
+              </div>
+            </div>
           </div>
           {showHidden ? (
             <div className="sidebar-section">
               <p className="sidebar-section-title">Hidden</p>
-              {hiddenLists.map((list) => (
-                <button
-                  key={list.id}
-                  type="button"
-                  className={`sidebar-item ${
-                    selectedId === list.id ? "active" : ""
-                  }`}
-                  onClick={() => setSelectedId(list.id)}
-                >
-                  <span>{list.name}</span>
-                  <span className="pill-small">{counts[list.id] ?? 0}</span>
-                </button>
-              ))}
-              {!loading && hiddenLists.length === 0 ? (
-                <p className="muted">No hidden lists.</p>
-              ) : null}
+              <div className="sidebar-scroll">
+                <div className="sidebar-list">
+                  {hiddenLists.map((list) => (
+                    <button
+                      key={list.id}
+                      type="button"
+                      className={`sidebar-item ${
+                        selectedId === list.id ? "active" : ""
+                      }`}
+                      onClick={() => setSelectedId(list.id)}
+                    >
+                      <span>{list.name}</span>
+                      <span className="pill-small">{counts[list.id] ?? 0}</span>
+                    </button>
+                  ))}
+                  {!loading && hiddenLists.length === 0 ? (
+                    <p className="muted">No hidden lists.</p>
+                  ) : null}
+                </div>
+              </div>
             </div>
           ) : null}
           {!loading && sortedLists.length === 0 ? (

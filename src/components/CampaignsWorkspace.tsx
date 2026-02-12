@@ -596,23 +596,25 @@ export default function CampaignsWorkspace() {
             </button>
           ))}
         </div>
-        <div className="sidebar-list">
-          {filteredCampaigns.map((campaign) => (
-            <button
-              key={campaign.id}
-              type="button"
-              className={`sidebar-item ${
-                selectedId === campaign.id ? "active" : ""
-              }`}
-              onClick={() => setSelectedId(campaign.id)}
-            >
-              <span>{campaign.name}</span>
-              <span className="pill-small">{campaign.status || "DRAFT"}</span>
-            </button>
-          ))}
-          {!loading && filteredCampaigns.length === 0 ? (
-            <p className="muted">No campaigns in this filter.</p>
-          ) : null}
+        <div className="sidebar-scroll">
+          <div className="sidebar-list">
+            {filteredCampaigns.map((campaign) => (
+              <button
+                key={campaign.id}
+                type="button"
+                className={`sidebar-item ${
+                  selectedId === campaign.id ? "active" : ""
+                }`}
+                onClick={() => setSelectedId(campaign.id)}
+              >
+                <span>{campaign.name}</span>
+                <span className="pill-small">{campaign.status || "DRAFT"}</span>
+              </button>
+            ))}
+            {!loading && filteredCampaigns.length === 0 ? (
+              <p className="muted">No campaigns in this filter.</p>
+            ) : null}
+          </div>
         </div>
       </aside>
 

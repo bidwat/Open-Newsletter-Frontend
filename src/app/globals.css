@@ -257,7 +257,10 @@ code {
   gap: 16px;
   position: sticky;
   top: 24px;
-  height: fit-content;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
   min-width: 240px;
   max-width: 320px;
 }
@@ -334,6 +337,23 @@ code {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  flex: 1;
+  min-height: 0;
+}
+
+.sidebar-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+}
+
+.sidebar-sections.split {
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  gap: 12px;
+  height: 100%;
 }
 
 .sidebar-item {
@@ -926,6 +946,8 @@ button:disabled,
   flex-direction: column;
   gap: 8px;
   font-size: 0.9rem;
+  flex: 1;
+  min-height: 0;
 }
 
 .table-shell {
@@ -999,6 +1021,15 @@ button:disabled,
   display: flex;
   flex-direction: column;
   gap: 8px;
+  min-height: 0;
+}
+
+.sidebar-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 6px;
 }
 
 .sidebar-section-title {
@@ -1087,6 +1118,8 @@ button:focus-visible,
     position: static;
     min-width: 0;
     max-width: none;
+    height: auto;
+    overflow: visible;
   }
 
   .workspace-detail {
