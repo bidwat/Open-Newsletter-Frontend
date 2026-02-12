@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Toast from "@/src/components/Toast";
 import ScrollableTable, {
   type TableColumn,
 } from "@/src/components/ScrollableTable";
+import ImportFileActions from "@/src/components/ImportFileActions";
 import {
   addContact,
   copyMailingList,
@@ -55,7 +56,6 @@ export default function MailingListsWorkspace() {
   const [loading, setLoading] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showImportModal, setShowImportModal] = useState(false);
   const [showAddContactModal, setShowAddContactModal] = useState(false);
   const [showImportContactsModal, setShowImportContactsModal] = useState(false);
   const [createForm, setCreateForm] = useState({ name: "", description: "" });
@@ -76,7 +76,6 @@ export default function MailingListsWorkspace() {
     null,
   );
   const [errorDialog, setErrorDialog] = useState<ErrorDialogState | null>(null);
-  const importContactsInputRef = useRef<HTMLInputElement | null>(null);
 
   const parseBackendErrorMessage = (error: string) => {
     try {
@@ -177,25 +176,58 @@ export default function MailingListsWorkspace() {
   }, [selectedId]);
 
   const handleCreateList = async () => {
-    if (!createForm.name.trim()) {
+    const name = createForm.name.trim();
+    const description = createForm.description.trim();
+
+    if (!name) {
       showToast("List name is required.", "warning");
-      return;
+      return false;
+    }
+
+    if (importFile) {
+      const formData = new FormData();
+      formData.append("name", name);
+      if (description) {
+        formData.append("description", description);
+      }
+      formData.append("file", importFile);
+
+      const result = await importMailingList(formData);
+      if (result.error) {
+        showBackendError(result.error, { title: "Unable to import list" });
+        return false;
+      }
+
+      showToast(
+        `Imported ${result.data?.imported ?? 0} contacts (skipped ${
+          result.data?.skipped ?? 0
+        }).`,
+      );
+      setImportFile(null);
+      setCreateForm({ name: "", description: "" });
+      setShowCreateModal(false);
+      await loadLists();
+      if (result.data?.mailingListId) {
+        setSelectedId(result.data.mailingListId);
+      }
+      return true;
     }
 
     const result = await createMailingList({
-      name: createForm.name.trim(),
-      description: createForm.description.trim() || undefined,
+      name,
+      description: description || undefined,
     });
 
     if (result.error) {
       showBackendError(result.error, { title: "Unable to create list" });
-      return;
+      return false;
     }
 
     showToast("Mailing list created.");
     setCreateForm({ name: "", description: "" });
     setShowCreateModal(false);
     await loadLists();
+    return true;
   };
 
   const handleAddContact = async () => {
@@ -319,34 +351,6 @@ export default function MailingListsWorkspace() {
         await loadLists();
       },
     });
-  };
-
-  const handleImportNewList = async () => {
-    if (!importFile) {
-      showToast("Choose a CSV file to import.", "warning");
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append("file", importFile);
-
-    const result = await importMailingList(formData);
-    if (result.error) {
-      showBackendError(result.error, { title: "Unable to import list" });
-      return;
-    }
-
-    showToast(
-      `Imported ${result.data?.imported ?? 0} contacts (skipped ${
-        result.data?.skipped ?? 0
-      }).`,
-    );
-    setImportFile(null);
-    setShowImportModal(false);
-    await loadLists();
-    if (result.data?.mailingListId) {
-      setSelectedId(result.data.mailingListId);
-    }
   };
 
   const handleImportToList = async () => {
@@ -510,16 +514,12 @@ export default function MailingListsWorkspace() {
         <button
           type="button"
           className="button secondary"
-          onClick={() => setShowCreateModal(true)}
+          onClick={() => {
+            setImportFile(null);
+            setShowCreateModal(true);
+          }}
         >
           New list
-        </button>
-        <button
-          type="button"
-          className="button secondary"
-          onClick={() => setShowImportModal(true)}
-        >
-          Import list
         </button>
         <div className="sidebar-list">
           <div className="sidebar-section">
@@ -675,54 +675,35 @@ export default function MailingListsWorkspace() {
                   />
                 </label>
               </div>
+              <div className="divider" />
+              <p className="muted">Optional: import a CSV to seed the list.</p>
+              <ImportFileActions
+                file={importFile}
+                onFileChange={setImportFile}
+                showImportButton={false}
+              />
               <div className="modal-actions">
                 <button
                   type="button"
                   className="button secondary"
-                  onClick={() => setShowCreateModal(false)}
+                  onClick={() => {
+                    setImportFile(null);
+                    setShowCreateModal(false);
+                  }}
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
                   className="action-save"
-                  onClick={handleCreateList}
+                  onClick={async () => {
+                    const didCreate = await handleCreateList();
+                    if (didCreate) {
+                      setImportFile(null);
+                    }
+                  }}
                 >
                   Create list
-                </button>
-              </div>
-            </div>
-          </div>
-        ) : null}
-
-        {showImportModal ? (
-          <div className="modal-overlay" role="dialog" aria-modal="true">
-            <div className="modal pressable">
-              <h3>Import mailing list</h3>
-              <div className="field-grid">
-                <label className="field field-wide">
-                  <span>CSV file</span>
-                  <input
-                    type="file"
-                    accept=".csv"
-                    onChange={(event) =>
-                      setImportFile(
-                        event.target.files ? event.target.files[0] : null,
-                      )
-                    }
-                  />
-                </label>
-              </div>
-              <div className="modal-actions">
-                <button
-                  type="button"
-                  className="button secondary"
-                  onClick={() => setShowImportModal(false)}
-                >
-                  Cancel
-                </button>
-                <button type="button" onClick={handleImportNewList}>
-                  Import list
                 </button>
               </div>
             </div>
@@ -796,33 +777,10 @@ export default function MailingListsWorkspace() {
             <div className="modal pressable">
               <h3>Import contacts</h3>
               <p className="muted">Upload a CSV file for this list.</p>
-              <div className="file-actions">
-                <span className="file-name">
-                  {importTargetFile
-                    ? importTargetFile.name
-                    : "No file selected"}
-                </span>
-                <button
-                  type="button"
-                  className="button secondary"
-                  onClick={() => importContactsInputRef.current?.click()}
-                >
-                  Select file
-                </button>
-                <button type="button" onClick={handleImportToList}>
-                  Import
-                </button>
-              </div>
-              <input
-                ref={importContactsInputRef}
-                type="file"
-                accept=".csv"
-                className="visually-hidden"
-                onChange={(event) =>
-                  setImportTargetFile(
-                    event.target.files ? event.target.files[0] : null,
-                  )
-                }
+              <ImportFileActions
+                file={importTargetFile}
+                onFileChange={setImportTargetFile}
+                onImport={handleImportToList}
               />
               <div className="modal-actions">
                 <button
