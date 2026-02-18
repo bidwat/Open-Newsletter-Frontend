@@ -34,6 +34,7 @@ export const API_ENDPOINTS = {
     `${CORE_API_PREFIX}/campaigns/${campaignId}/contacts/${contactId}/exclusion`,
   campaignContactsExclusions: (campaignId: string) =>
     `${CORE_API_PREFIX}/campaigns/${campaignId}/contacts/exclusions`,
+  usersMeProfile: `${CORE_API_PREFIX}/users/me/profile`,
 } as const;
 
 export interface CampaignDraftPayload {
@@ -100,6 +101,13 @@ export interface CampaignAudienceContact {
   lastName?: string;
   excluded?: boolean;
   sourceLists?: CampaignMailingList[];
+}
+
+export interface CoreUserProfile {
+  id?: number;
+  email?: string;
+  name: string;
+  username: string;
 }
 
 interface ApiResponse<T> {
@@ -370,4 +378,18 @@ export async function bulkUpdateCampaignContactExclusions(
     API_ENDPOINTS.campaignContactsExclusions(campaignId),
     payload,
   );
+}
+
+export async function fetchCoreMyProfile() {
+  return apiGet<CoreUserProfile>(API_ENDPOINTS.usersMeProfile);
+}
+
+export async function updateCoreMyProfile(payload: {
+  name: string;
+  username: string;
+}) {
+  return fetchWithAuth<CoreUserProfile>(API_ENDPOINTS.usersMeProfile, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
 }

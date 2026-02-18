@@ -514,7 +514,7 @@ code {
 
 .profile-mini .profile-card {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
   padding: 6px 10px;
   border: var(--border);
@@ -536,6 +536,51 @@ code {
 
 .profile-mini .profile-email {
   display: none;
+}
+
+.profile-mini .profile-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.profile-mini .profile-username {
+  margin: 0;
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.profile-mini .profile-edit-button {
+  padding: 4px 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.profile-mini .profile-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 220px;
+}
+
+.profile-mini .profile-edit-form .field {
+  gap: 4px;
+  font-size: 0.78rem;
+}
+
+.profile-mini .profile-edit-form .field input {
+  padding: 6px 8px;
+  font-size: 0.8rem;
+}
+
+.profile-mini .profile-edit-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.profile-mini .profile-edit-actions button {
+  padding: 6px 10px;
+  font-size: 0.78rem;
 }
 
 .loading-state {
@@ -722,6 +767,10 @@ button:disabled,
 
 .preview-panel {
   padding: 18px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: 40vh;
 }
 
 .preview-header {
@@ -746,6 +795,11 @@ button:disabled,
   display: flex;
   flex-direction: column;
   gap: 12px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 6px;
 }
 
 .preview-subject {

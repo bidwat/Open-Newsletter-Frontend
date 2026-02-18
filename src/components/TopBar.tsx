@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { auth0 } from "@/src/lib/auth0";
 import Profile from "@/src/components/Profile";
+import { fetchCoreMyProfile } from "@/src/lib/api";
 
 export default async function TopBar() {
-  const session = await auth0.getSession();
-  const user = session?.user;
+  const backendProfile = await fetchCoreMyProfile();
+  const user = backendProfile.data ?? (await fetchCoreMyProfile()).data;
 
   return (
     <header className="top-bar">
@@ -30,7 +30,16 @@ export default async function TopBar() {
         {user ? (
           <>
             <div className="profile-mini">
-              <Profile />
+              <Profile
+                initialProfile={
+                  backendProfile.data
+                    ? {
+                        name: backendProfile.data.name,
+                        username: backendProfile.data.username,
+                      }
+                    : undefined
+                }
+              />
             </div>
             <Link href="/logout" className="nav-link">
               Log out
